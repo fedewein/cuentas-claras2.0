@@ -173,7 +173,7 @@ function Main({user,onSwitch,txs,updTxs,contribs,updContribs,loans,updLoans,adjs
           {user==="fede"?"🧔 Fede":"👩 Gaby"} ↩
         </div>
       </div>
-      <div style={{fontSize:13,fontWeight:800,color:"white",padding:"10px 14px",borderRadius:14,background:net===0?"#22c55e":net>0?"#f59e0b":"#6366f1",textAlign:"center",lineHeight:1.5,minWidth:110}}>
+      <div style={{fontSize:11,fontWeight:700,color:"white",padding:"6px 10px",borderRadius:99,background:net===0?"#22c55e":net>0?"#f59e0b":"#6366f1",textAlign:"center",lineHeight:1.4}}>
         {net===0?"🤝 Par":net>0?`Gaby debe\n${fmt(Math.abs(net))}`:`Fede debe\n${fmt(Math.abs(net))}`}
       </div>
     </div>
@@ -294,4 +294,4 @@ function GastosTab({user,txs,updTxs,hist,updHist}){
             <div style={{fontSize:13,fontWeight:600,color:"#1e293b",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
               {tx.description} {tx.edited&&<span style={{background:"#fef3c7",color:"#92400e",fontSize:10,fontWeight:700,padding:"1px 5px",borderRadius:99}}>A.D.R.</span>}
             </div>
-            <div style={{fontSize:11,co
+            <div style={{fontSize:11,color:"#94a3b8",
