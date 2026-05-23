@@ -404,7 +404,10 @@ function PozoTab({user,contribs,updContribs,txs,adjs,updAdjs,hist,updHist}){
             <div style={{fontSize:13,fontWeight:600,color:"#1e293b"}}>{c.who==="fede"?"🧔 Fede":"👩 Gaby"} aportó al pozo</div>
             <div style={{fontSize:11,color:"#94a3b8"}}>{fmtD(c.date)}</div>
           </div>
-          <div style={{fontSize:14,fontWeight:800,color:"#22c55e"}}>+{fmt(c.amount)}</div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{fontSize:14,fontWeight:800,color:"#22c55e"}}>+{fmt(c.amount)}</div>
+            <button onClick={()=>{if(window.confirm("¿Borrar este aporte?"))updContribs(contribs.filter(x=>x.id!==c.id));}} style={{background:"#fee2e2",color:"#ef4444",border:"none",borderRadius:7,padding:"4px 8px",fontSize:13,cursor:"pointer",fontWeight:700}}>🗑</button>
+          </div>
         </div>
       ))}
     </div>
@@ -457,7 +460,10 @@ function PrestamosTab({user,loans,updLoans}){
         <div style={{fontSize:13,fontWeight:700,color:"#1e293b",display:"flex",alignItems:"center",gap:4}}>
           {l.from==="fede"?"🧔 Fede":"👩 Gaby"} <span style={{color:"#94a3b8"}}>→</span> {l.to==="fede"?"🧔 Fede":"👩 Gaby"}
         </div>
-        <div style={{fontSize:16,fontWeight:900,color:l.settled?"#9ca3af":"#f59e0b"}}>{fmt(l.amount)}</div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{fontSize:16,fontWeight:900,color:l.settled?"#9ca3af":"#f59e0b"}}>{fmt(l.amount)}</div>
+          <button onClick={()=>{if(window.confirm("¿Borrar este préstamo?"))updLoans(loans.filter(x=>x.id!==l.id));}} style={{background:"#fee2e2",color:"#ef4444",border:"none",borderRadius:7,padding:"4px 8px",fontSize:13,cursor:"pointer",fontWeight:700}}>🗑</button>
+        </div>
       </div>
       <div style={{fontSize:13,color:"#475569"}}>{l.description}</div>
       <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>{fmtD(l.date)}{l.settled?` · Saldado ${fmtD(l.settledDate)}`:""}</div>
