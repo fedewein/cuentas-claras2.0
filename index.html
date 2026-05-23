@@ -197,10 +197,12 @@ function GastosTab({user,txs,updTxs,hist,updHist}){
   const [filter,setFilter]=useState("all");
   const [editTx,setEditTx]=useState(null);
   const [editReason,setEditReason]=useState("");
+  const [selectMode,setSelectMode]=useState(false);
+  const [selected,setSelected]=useState(new Set());
+  const [confirmAll,setConfirmAll]=useState(false);
   const cats=["Supermercado","Restaurante","Servicios","Nafta","Farmacia","Ropa","Entretenimiento","Vacaciones","Médico","Otros"];
   const blank={description:"",amount:"",category:"Supermercado",paidBy:user,type:"pot",date:today()};
   const [form,setForm]=useState(blank);
-  const f=p=>({...p});
 
   const add=()=>{
     if(!form.description.trim()||!form.amount)return;
@@ -216,10 +218,36 @@ function GastosTab({user,txs,updTxs,hist,updHist}){
     setEditTx(null);
   };
 
+  const toggleSel=id=>{
+    setSelected(prev=>{const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n;});
+  };
+
+  const deleteSelected=()=>{
+    if(!window.confirm(`¿Borrar ${selected.size} gasto${selected.size>1?"s":""}?`))return;
+    updTxs(txs.filter(t=>!selected.has(t.id)));
+    setSelected(new Set()); setSelectMode(false);
+  };
+
+  const deleteAll=()=>{
+    updTxs([]); setConfirmAll(false); setSelectMode(false); setSelected(new Set());
+  };
+
   const shown=txs.filter(t=>filter==="all"||t.paidBy===filter).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,60);
 
   return <div>
-    <Row><H2>Gastos</H2><Btn onClick={()=>setOpen(o=>!o)}>+ Nuevo</Btn></Row>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+      <H2>Gastos</H2>
+      <div style={{display:"flex",gap:6}}>
+        <Btn onClick={()=>setOpen(o=>!o)}>+ Nuevo</Btn>
+        {txs.length>0&&<>
+          <button onClick={()=>{setSelectMode(s=>!s);setSelected(new Set());}} style={{fontSize:12,fontWeight:700,padding:"7px 12px",borderRadius:99,border:"1.5px solid #e2e8f0",background:selectMode?"#ede9fe":"white",color:selectMode?"#6366f1":"#64748b",cursor:"pointer"}}>
+            {selectMode?"Cancelar":"Selec."}
+          </button>
+          <button onClick={()=>setConfirmAll(true)} style={{fontSize:12,fontWeight:700,padding:"7px 12px",borderRadius:99,border:"1.5px solid #fee2e2",background:"#fff1f2",color:"#ef4444",cursor:"pointer"}}>🗑</button>
+        </>}
+      </div>
+    </div>
+
     {open&&<Card>
       <input style={inp} placeholder="Descripción *" value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))}/>
       <div style={{display:"flex",gap:8}}>
@@ -238,27 +266,43 @@ function GastosTab({user,txs,updTxs,hist,updHist}){
         <button style={btnS} onClick={()=>setOpen(false)}>Cancelar</button>
       </div>
     </Card>}
+
+    {selectMode&&selected.size>0&&
+      <div style={{background:"#fef3c7",borderRadius:10,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <span style={{fontSize:13,color:"#92400e",fontWeight:600}}>{selected.size} seleccionado{selected.size>1?"s":""}</span>
+        <button onClick={deleteSelected} style={{background:"#ef4444",color:"white",border:"none",borderRadius:8,padding:"7px 14px",fontWeight:700,cursor:"pointer",fontSize:13}}>🗑 Borrar</button>
+      </div>
+    }
+
     <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
       {[["all","Todos"],["fede","🧔 Fede"],["gaby","👩 Gaby"]].map(([v,l])=>(
         <button key={v} onClick={()=>setFilter(v)} style={{...chip,...(filter===v?chipA:{})}}>{l}</button>
       ))}
     </div>
+
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {shown.map(tx=>(
-        <div key={tx.id} style={{background:"white",borderRadius:12,padding:"11px 13px",display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
+      {shown.map(tx=>{
+        const isSel=selected.has(tx.id);
+        return <div key={tx.id}
+          onClick={selectMode?()=>toggleSel(tx.id):undefined}
+          style={{background:isSel?"#ede9fe":"white",borderRadius:12,padding:"11px 13px",display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 1px 3px rgba(0,0,0,.06)",cursor:selectMode?"pointer":"default",borderLeft:isSel?"3px solid #6366f1":"3px solid transparent"}}>
           <div style={{flex:1,minWidth:0}}>
+            {selectMode&&<div style={{fontSize:11,color:isSel?"#6366f1":"#94a3b8",fontWeight:700,marginBottom:3}}>{isSel?"✅ Seleccionado":"○ Tocar para seleccionar"}</div>}
             <div style={{fontSize:13,fontWeight:600,color:"#1e293b",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
               {tx.description} {tx.edited&&<span style={{background:"#fef3c7",color:"#92400e",fontSize:10,fontWeight:700,padding:"1px 5px",borderRadius:99}}>A.D.R.</span>}
             </div>
             <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>{fmtD(tx.date)} · {tx.category} · {tx.paidBy==="fede"?"🧔":"👩"} · {tx.type==="pot"?"🪣":"🤝"}</div>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:6,marginLeft:8}}>
+          {!selectMode&&<div style={{display:"flex",alignItems:"center",gap:6,marginLeft:8}}>
             <div style={{fontSize:14,fontWeight:800,color:"#1e293b",whiteSpace:"nowrap"}}>{fmt(tx.amount)}</div>
             <button onClick={()=>{setEditTx({...tx});setEditReason("");}} style={{background:"none",border:"none",cursor:"pointer",fontSize:15,padding:2}}>✏️</button>
-          </div>
-        </div>
-      ))}
+            <button onClick={()=>{if(window.confirm("¿Borrar este gasto?"))updTxs(txs.filter(t=>t.id!==tx.id));}} style={{background:"#fee2e2",color:"#ef4444",border:"none",borderRadius:7,padding:"4px 8px",fontSize:13,cursor:"pointer",fontWeight:700}}>🗑</button>
+          </div>}
+          {selectMode&&<div style={{marginLeft:8,fontSize:20}}>{isSel?"✅":"○"}</div>}
+        </div>;
+      })}
     </div>
+
     {editTx&&<Modal onClose={()=>setEditTx(null)}>
       <h3 style={{fontSize:17,fontWeight:800,margin:"0 0 8px",color:"#1e293b"}}>✏️ Editar Gasto</h3>
       <div style={{background:"#fef3c7",borderRadius:10,padding:"10px 12px",fontSize:13,color:"#92400e"}}>Quedará como <strong>A.D.R.</strong> (Ajuste por Disidencias con la Realidad)</div>
@@ -271,6 +315,17 @@ function GastosTab({user,txs,updTxs,hist,updHist}){
       <div style={{display:"flex",gap:8}}>
         <button style={btnP} onClick={confirmEdit}>Confirmar A.D.R.</button>
         <button style={btnS} onClick={()=>setEditTx(null)}>Cancelar</button>
+      </div>
+    </Modal>}
+
+    {confirmAll&&<Modal onClose={()=>setConfirmAll(false)}>
+      <h3 style={{fontSize:17,fontWeight:800,margin:"0 0 8px",color:"#1e293b"}}>🗑 Borrar todos los gastos</h3>
+      <div style={{background:"#fee2e2",borderRadius:10,padding:"10px 13px",fontSize:13,color:"#b91c1c"}}>
+        Esto borra <strong>todos los {txs.length} gastos</strong> permanentemente. No se puede deshacer.
+      </div>
+      <div style={{display:"flex",gap:8,marginTop:4}}>
+        <button style={{...btnP,background:"#ef4444"}} onClick={deleteAll}>Sí, borrar todo</button>
+        <button style={btnS} onClick={()=>setConfirmAll(false)}>Cancelar</button>
       </div>
     </Modal>}
   </div>;
